@@ -18,67 +18,101 @@ struct ContentView: View {
         Quiz(question: "Xcode画面の右側にはユーティリティーズがある", answer: true),
         Quiz(question: "Textは文字列を表示する際に利用する", answer: true)
     ]
+    
+    @AppStorage("quiz") var quizzesData = Data()
+    @State var quizzesArray: [Quiz] = []
+    
     @State var currentQuestionNum: Int = 0
     @State var showingAlert = false
     @State var alertTitle = ""
     
+    init() {
+        if let decodedQuizzes = try? JSONDecoder().decode([Quiz].self, from: quizzesData) {
+            _quizzesArray = State(initialValue: decodedQuizzes)
+        }
+    }
+    
     var body: some View {
-        GeometryReader{ geometry in
-            
-            
-            VStack {
-                Text(showQuestion())
-                    .padding()
-                    .frame(width: geometry.size.width * 0.85,alignment: .leading)
-                    .font(.system(size: 25, ))
-                    .fontDesign(.rounded)
-                    .background(.yellow)
+        NavigationStack{
+            GeometryReader{ geometry in
                 
-                Spacer()
                 
-                HStack{
-                    Button {
-                        checkAnswer(yourAnswer: true)
-                    } label: {
-                        Text("o")
-                    }
-                    .frame(width: geometry.size.width * 0.4, height: geometry.size.width * 0.4) // 幅: ""、高さ:""
-                    .font(.system(size: 100, weight: .bold)) // フォントサイズ: 100 ,太字
-                    .foregroundStyle(.white) // 文字の色: 白
-                    .background(.red) // 背景色: 赤
+                VStack {
+                    Text(showQuestion())
+                        .padding()
+                        .frame(width: geometry.size.width * 0.85,alignment: .leading)
+                        .font(.system(size: 25, ))
+                        .fontDesign(.rounded)
+                        .background(.yellow)
                     
-                    Button {
-                        checkAnswer(yourAnswer: false)
-                    } label: {
-                        Text("x")
+                    Spacer()
+                    
+                    HStack{
+                        Button {
+                            checkAnswer(yourAnswer: true)
+                        } label: {
+                            Text("o")
+                        }
+                        .frame(width: geometry.size.width * 0.4, height: geometry.size.width * 0.4) // 幅: ""、高さ:""
+                        .font(.system(size: 100, weight: .bold)) // フォントサイズ: 100 ,太字
+                        .foregroundStyle(.white) // 文字の色: 白
+                        .background(.red) // 背景色: 赤
+                        
+                        Button {
+                            checkAnswer(yourAnswer: false)
+                        } label: {
+                            Text("x")
+                        }
+                        .frame(width: geometry.size.width * 0.4, height: geometry.size.width * 0.4) // 幅: 、高さ:
+                        .font(.system(size: 100, weight: .bold)) // フォントサイズ: 100 ,太字
+                        .foregroundStyle(.white) // 文字の色: 白
+                        .background(.blue) // 背景色: 青
+                        
                     }
-                    .frame(width: geometry.size.width * 0.4, height: geometry.size.width * 0.4) // 幅: 、高さ:
-                    .font(.system(size: 100, weight: .bold)) // フォントサイズ: 100 ,太字
-                    .foregroundStyle(.white) // 文字の色: 白
-                    .background(.blue) // 背景色: 青
+                }
+                .padding()
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .navigationTitle("マルバツクイズ")
+                .alert(alertTitle, isPresented: $showingAlert) {
+                    Button("OK",role: .cancel){}
                     
                 }
-            }
-            .padding()
-            .frame(width: geometry.size.width, height: geometry.size.height)
-            
-            .alert(alertTitle, isPresented: $showingAlert) {
-                Button("OK",role: .cancel){}
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        NavigationLink{
+                            
+                            CreateView(quizzesArray: $quizzesArray)
+                                .navigationTitle("問題を作ろう")
+                        }label:{
+                            Image(systemName: "plus")
+                                .font(.title)
+                        }
+                    }
+                }
                 
             }
         }
     }
     func showQuestion() -> String {
-        let question = quizeExamples[currentQuestionNum].question
+        
+        var question = "問題がありません！"
+        
+        if !quizzesArray.isEmpty {
+            let quiz = quizzesArray[currentQuestionNum]
+            question = quiz.question
+            
+        }
         return question
     }
     func checkAnswer(yourAnswer:  Bool) {
-        let quiz = quizeExamples[currentQuestionNum]
+        if quizzesArray.isEmpty {return}
+        let quiz = quizzesArray[currentQuestionNum]
+        
         let ans = quiz.answer
         if yourAnswer == ans {
             alertTitle = "正解"
             
-            if currentQuestionNum + 1 < quizeExamples.count {
+            if currentQuestionNum + 1 < quizzesArray.count {
                 currentQuestionNum += 1
             } else {
                 currentQuestionNum = 0
