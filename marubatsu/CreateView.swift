@@ -17,7 +17,7 @@ struct CreateView: View {
     let storekey = "quiz"  //UserDefaultsのキーを定義
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
 
             VStack {
                 Text("問題文と回答を入力して、追加ボタンを押してください")
